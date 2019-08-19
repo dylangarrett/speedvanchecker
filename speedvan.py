@@ -1,5 +1,7 @@
 from xml.dom import minidom
 import math
+from geopy import distance
+import time
 
 def coordinateSplit(coords):
     ##Splits latitude and longitude
@@ -8,15 +10,27 @@ def coordinateSplit(coords):
         coords = ['0','0']
     return coords
 
-def myGPS(object):
+class myGPS(object):
 
-    def __init__(self, lat, long):
+    def __init__(self, lat, lon):
         self.lat = lat
-        self.long = long
-
-
+        self.lon = lon
+        self.tuple = (lat, lon)
 
 class SpeedVanLocation(object): 
+
+    def midPoint(self):
+        ##since the coordinates are so close you can take them as two points on a plane
+        lat1 = float(self.startLat)
+        lat2 = float(self.endLat)
+        long1 = float(self.startLong)
+        long2 = float(self.endLong)
+
+        midLat = (lat1 + lat2)/2
+        midLong = (long1 + long2)/2
+
+        midTuple = (midLat, midLong)
+        return midTuple
 
     def __init__(self, startLatLong, endLatLong, coords):
         self.startLatLong = startLatLong
@@ -28,83 +42,92 @@ class SpeedVanLocation(object):
         self.startLong = self.splitStart[0]
         self.endLat = self.splitEnd[1]
         self.endLong = self.splitEnd[0]
+        self.startTuple = (self.startLat, self.startLong)
+        self.endTuple = (self.endLat, self.endLong)
+        self.midTuple = self.midPoint()
 
-    def midPoint(self):
+def alert():
+     #method to alert the driver
+     #play sound/flash light etc;
+     #prints beep for now
+     print("BEEP BEEP BEEP")
 
-        ##since the coordinates are so close you can take them as two points on a plan
+def scrapeData():
 
-        lat1 = float(self.startLat)
-        lat2 = float(self.endLat)
-        long1 = float(self.startLong)
-        long2 = float(self.endLong)
+    print("Opening document..")
+    mydoc = minidom.parse('xdoc.xml')
+    print("Document opened.")
 
-        midLat = (lat1 + lat2)/2
-        midLong = (long1 + long2)/2
+    print("Scraping document..")
+    coords = mydoc.getElementsByTagName('coordinates')
+    print("Document scraped.")
 
-        midPoint = []
-        midPoint.append(midLat)
-        midPoint.append(midLong)
-        return midPoint
+    print("Initializing allCoords list..")
+    allCoords = ''
+    print("List initialized.")
 
-        ##cartesian values for calculating mid point
-        
+    print("Passing data from document in to allCoords list..")
+    for elem in coords:
+        allCoords = allCoords + elem.firstChild.data.replace(",0.0", "") + "/n"
+    print("Success.")
 
-##FIRST STEP
-##Clean up the data from the .kmz file
-##Convert from .kmz to .kml to .xml
+    print("Splitting allCoords..")
+    coordinates = allCoords.split("/n")
+    print("Split successful.")
 
-print("Opening document..")
-mydoc = minidom.parse('xdoc.xml')
-print("Document opened.")
+    print("Cleaning up list, making list of lists..")
+    coordinates = [i.split(' ') for i in coordinates]
+    print("Success.")
 
-print("Scraping document..")
-coords = mydoc.getElementsByTagName('coordinates')
-print("Document scraped.")
+    speedVanList = []
 
-print("Initializing allCoords list..")
-allCoords = ''
-print("List initialized.")
+    for elem in coordinates:
+        lastVal = len(elem) - 1    
+        speedVanList.append(SpeedVanLocation(elem[0], elem[lastVal], elem))
 
-print("Passing data from document in to allCoords list..")
-for elem in coords:
-    allCoords = allCoords + elem.firstChild.data.replace(",0.0", "") + "/n"
-print("Success.")
+    del speedVanList[-1]
 
-print("Splitting allCoords..")
-coordinates = allCoords.split("/n")
-print("Split successful.")
+    return speedVanList
 
-print("Cleaning up list, making list of lists..")
-coordinates = [i.split(' ') for i in coordinates]
-print("Success.")
+def distanceCheck(myGPS, speedVan):
+    ##both inputs should be in format tuple (lat,lon)
+    distanceFromMidPoint = distance.distance(myGPS.tuple, speedVan.midTuple).km
+    if distanceFromMidPoint <= 3:
+        for coord in speedVan.coords:
+            longLat = coordinateSplit(coord)
+            coordTuple = (longLat[1], longLat[0])
+            distanceFromCoord = distance.distance(myGPS.tuple, coordTuple).km
+            if distanceFromCoord <= 0.5:
+                return True
+            else:
+                return False
+    elif distanceFromMidPoint > 3:
+        return False
 
+def main():
 
-#list of speedVanLocation objects
-speedVanList = []
+    speedVanList = scrapeData()
 
+    print("Setting run = true")
+    run = True
 
-for elem in coordinates:
-    lastVal = len(elem) - 1    
-    speedVanList.append(SpeedVanLocation(elem[0], elem[lastVal], elem))
+    # while(run):
+        #print("Running")
+        #update gps location
+        # gpsLat = 1  #pass in value from gps
+        # gpsLong = 2 #pass in value from gps
+        # GPS = myGPS(55.139766, -8.228917) #replace values with gpslat and gpslong
+    
+        # for speedVan in speedVanList:
+        #     if(distanceCheck(GPS, speedVan)):
+        #         alert()
 
-del speedVanList[-1]
+    GPS = myGPS(55.139766, -8.228917)
+    for speedVan in speedVanList:
+        if(distanceCheck(GPS, speedVan)):
+            alert()
 
-for elem in speedVanList:
-    print("Start Lat: " + elem.startLat + " - Start Long: " + elem.startLong)
-    print("End Lat: " + elem.endLat + " - End Long: " + elem.endLong)
-    midPoint = elem.midPoint()
-    print(midPoint)
-    print("\n")
-
-   
-
-##find the middle point of the coordinates
-##draw circle around the coordinates (radius)
-##if my gps coordinates are within that circle
-##draw smaller circles around the coordinates between first and last point
-##if my gps coordinates are within any of the smaller circles
-##beep beep beep
-
+main()
     
 
 
