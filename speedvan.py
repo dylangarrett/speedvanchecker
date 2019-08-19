@@ -1,13 +1,15 @@
 from xml.dom import minidom
 import math
 from geopy import distance
-import time
+
+# Written by Dylan Garrett - dylan@webfire.co
+# 19/08/2018
 
 def coordinateSplit(coords):
     ##Splits latitude and longitude
     coords = coords.split(',')
     if coords == ['']:
-        coords = ['0','0']
+        coords = ['0','0']    
     return coords
 
 class myGPS(object):
@@ -46,49 +48,49 @@ class SpeedVanLocation(object):
         self.endTuple = (self.endLat, self.endLong)
         self.midTuple = self.midPoint()
 
+##triggers if you are close to a speed van
 def alert():
      #method to alert the driver
      #play sound/flash light etc;
      #prints beep for now
      print("BEEP BEEP BEEP")
+     return "BEEP BEEP BEEP"
 
+##takes the data from the .xml file and returns a list filled with 'clean'ish data
 def scrapeData():
 
-    print("Opening document..")
+    #open the document
     mydoc = minidom.parse('xdoc.xml')
-    print("Document opened.")
 
-    print("Scraping document..")
+    #scrape the coordinates from the document
     coords = mydoc.getElementsByTagName('coordinates')
-    print("Document scraped.")
 
-    print("Initializing allCoords list..")
-    allCoords = ''
-    print("List initialized.")
+    #create a list for all the coordinates
+    allCoords = ""
 
-    print("Passing data from document in to allCoords list..")
+    #cleans and passes data from the document into the list
     for elem in coords:
         allCoords = allCoords + elem.firstChild.data.replace(",0.0", "") + "/n"
-    print("Success.")
 
-    print("Splitting allCoords..")
+    #split the coordinates, creating a list of lists
+    #the first element is a list of all coordinates associated with a speed van
     coordinates = allCoords.split("/n")
-    print("Split successful.")
-
-    print("Cleaning up list, making list of lists..")
     coordinates = [i.split(' ') for i in coordinates]
-    print("Success.")
 
+    #creates list of speedvanlocation objects using the data from the previous list
     speedVanList = []
-
     for elem in coordinates:
         lastVal = len(elem) - 1    
         speedVanList.append(SpeedVanLocation(elem[0], elem[lastVal], elem))
 
+    ##removing invalid values and unnecessary lists
     del speedVanList[-1]
+    del allCoords
+    del coordinates
 
     return speedVanList
 
+##checks the distance between the speedvans and your gps location and returns true/false depending on whether you're close to a speed van
 def distanceCheck(myGPS, speedVan):
     ##both inputs should be in format tuple (lat,lon)
     distanceFromMidPoint = distance.distance(myGPS.tuple, speedVan.midTuple).km
@@ -107,9 +109,7 @@ def distanceCheck(myGPS, speedVan):
 def main():
 
     speedVanList = scrapeData()
-
-    print("Setting run = true")
-    run = True
+    # run = True
 
     # while(run):
         #print("Running")
@@ -122,10 +122,23 @@ def main():
         #     if(distanceCheck(GPS, speedVan)):
         #         alert()
 
+    testString = ''
+    print("Testing coordinate which should trigger alert..")
     GPS = myGPS(55.139766, -8.228917)
     for speedVan in speedVanList:
         if(distanceCheck(GPS, speedVan)):
-            alert()
+            testString += alert()
+            break
+
+    print("Testing coordinate which should not trigger alert..")
+    GPS = myGPS(59.139766, -8.228917)
+    for speedVan in speedVanList:
+        if(distanceCheck(GPS, speedVan)):
+            testString += alert()
+            break
+    
+    if(testString == 'BEEP BEEP BEEP'):
+        print("Test successful. Conditions passed.")
 
 main()
     
