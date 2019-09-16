@@ -2,8 +2,8 @@ from xml.dom import minidom
 import math
 from geopy import distance
 
-# Written by Dylan Garrett - dylan@webfire.co
-# 19/08/2018
+# Written by Dylan Garrett - hello@developerdylan.com
+# 19/08/2019
 
 def coordinateSplit(coords):
     ##Splits latitude and longitude
@@ -94,21 +94,21 @@ def scrapeData():
 def distanceCheck(myGPS, speedVan):
     ##both inputs should be in format tuple (lat,lon)
     distanceFromMidPoint = distance.distance(myGPS.tuple, speedVan.midTuple).km
-    if distanceFromMidPoint <= 3:
+    if distanceFromMidPoint <= 3: #less than 3km
         for coord in speedVan.coords:
             longLat = coordinateSplit(coord)
             coordTuple = (longLat[1], longLat[0])
             distanceFromCoord = distance.distance(myGPS.tuple, coordTuple).km
-            if distanceFromCoord <= 0.5:
+            if distanceFromCoord <= 0.3: #less than 300m or .3km
                 return True
             else:
                 return False
     elif distanceFromMidPoint > 3:
         return False
 
-def main():
+speedVanList = scrapeData()
 
-    speedVanList = scrapeData()
+def main():
     # run = True
 
     # while(run):
