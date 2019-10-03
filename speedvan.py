@@ -1,9 +1,10 @@
 from xml.dom import minidom
-import math
+import math, time
 from geopy import distance
+from gps import liveLatLong
 
 # Written by Dylan Garrett - hello@developerdylan.com
-# 19/08/2019
+# www.github.com/dylangarrett
 
 def coordinateSplit(coords):
     ##Splits latitude and longitude
@@ -56,16 +57,10 @@ def alert():
      print("BEEP BEEP BEEP")
      return "BEEP BEEP BEEP"
 
-##takes the data from the .xml file and returns a list filled with 'clean'ish data
 def scrapeData():
-
-    #open the document
     mydoc = minidom.parse('xdoc.xml')
-
-    #scrape the coordinates from the document
     coords = mydoc.getElementsByTagName('coordinates')
 
-    #create a list for all the coordinates
     allCoords = ""
 
     #cleans and passes data from the document into the list
@@ -83,7 +78,6 @@ def scrapeData():
         lastVal = len(elem) - 1    
         speedVanList.append(SpeedVanLocation(elem[0], elem[lastVal], elem))
 
-    ##removing invalid values and unnecessary lists
     del speedVanList[-1]
     del allCoords
     del coordinates
@@ -92,7 +86,6 @@ def scrapeData():
 
 ##checks the distance between the speedvans and your gps location and returns true/false depending on whether you're close to a speed van
 def distanceCheck(myGPS, speedVan):
-    ##both inputs should be in format tuple (lat,lon)
     distanceFromMidPoint = distance.distance(myGPS.tuple, speedVan.midTuple).km
     if distanceFromMidPoint <= 3: #less than 3km
         for coord in speedVan.coords:
@@ -106,41 +99,23 @@ def distanceCheck(myGPS, speedVan):
     elif distanceFromMidPoint > 3:
         return False
 
-speedVanList = scrapeData()
+if __name__ == '__main__':
+    speedVanList = scrapeData()
+    run = True
 
-def main():
-    # run = True
-
-    # while(run):
-        #print("Running")
+    print("Running")
+    while(run):     
         #update gps location
-        # gpsLat = 1  #pass in value from gps
-        # gpsLong = 2 #pass in value from gps
-        # GPS = myGPS(55.139766, -8.228917) #replace values with gpslat and gpslong
-    
-        # for speedVan in speedVanList:
-        #     if(distanceCheck(GPS, speedVan)):
-        #         alert()
+        gpsCoords = liveLatLong()
+        gpsLat = gpsCoords[0]
+        gpsLong = gpsCoords[1]
+        GPS = myGPS(gpsLat, gpsLong) 
+        for speedVan in speedVanList:
+            if(distanceCheck(GPS, speedVan)):
+                print("You are near a speed van.")
+                alert()
+                time.sleep(3)
 
-    testString = ''
-    print("Testing coordinate which should trigger alert..")
-    GPS = myGPS(55.139766, -8.228917)
-    for speedVan in speedVanList:
-        if(distanceCheck(GPS, speedVan)):
-            testString += alert()
-            break
-
-    print("Testing coordinate which should not trigger alert..")
-    GPS = myGPS(59.139766, -8.228917)
-    for speedVan in speedVanList:
-        if(distanceCheck(GPS, speedVan)):
-            testString += alert()
-            break
-    
-    if(testString == 'BEEP BEEP BEEP'):
-        print("Test successful. Conditions passed.")
-
-main()
     
 
 
