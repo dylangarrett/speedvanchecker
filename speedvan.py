@@ -3,6 +3,7 @@ from xml.dom import minidom
 import math, time
 from geopy import distance
 from myGPS import getLatLng
+from pygame import mixer
 
 
 # Written by Dylan Garrett - hello@developerdylan.com
@@ -16,8 +17,10 @@ def coordinateSplit(coords):
     return coords
 
 class myGPS(object):
-
+    mixer.init()
+    
     def __init__(self):
+
         self.tuple = getLatLng()
         self.lat = self.tuple[0]
         self.lng = self.tuple[1]
@@ -27,6 +30,9 @@ class myGPS(object):
         self.lat = self.tuple[0]
         self.lng = self.tuple[1]
         
+    def alert(self):
+        mixer.Sound("beep.wav").play()
+    
     def toString(self):
         return "Latitude: " + self.lat + ", Longitude:  " + self.lng
     
@@ -59,14 +65,7 @@ class SpeedVanLocation(object):
         self.startTuple = (self.startLat, self.startLong)
         self.endTuple = (self.endLat, self.endLong)
         self.midTuple = self.midPoint()
-
-##triggers if you are close to a speed van
-def alert():
-     #method to alert the driver
-     #play sound/flash light etc;
-     #prints beep for now
-     print("BEEP BEEP BEEP")
-     return "BEEP BEEP BEEP"
+   
 
 def scrapeData():
     mydoc = minidom.parse('xdoc.xml')
@@ -111,6 +110,7 @@ def distanceCheck(myGPS, speedVan):
         return False
 
 if __name__ == '__main__':
+
     speedVanList = scrapeData()
     GPS = myGPS()
     run = True
@@ -119,11 +119,12 @@ if __name__ == '__main__':
     while(run):
         GPS.update()
         for speedVan in speedVanList:
-            if(distanceCheck(GPS, speedVan)):
+            while(distanceCheck(GPS, speedVan)):
                 print("You are near a speed van.")
-                alert()
+                GPS.alert()
                 time.sleep(3)
         time.sleep(5)
+
 
     
 
