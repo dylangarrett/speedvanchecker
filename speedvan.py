@@ -1,7 +1,9 @@
+from __future__ import print_function
 from xml.dom import minidom
 import math, time
 from geopy import distance
-from gps import liveLatLong
+from myGPS import getLatLng
+
 
 # Written by Dylan Garrett - hello@developerdylan.com
 # www.github.com/dylangarrett
@@ -15,10 +17,19 @@ def coordinateSplit(coords):
 
 class myGPS(object):
 
-    def __init__(self, lat, lon):
-        self.lat = lat
-        self.lon = lon
-        self.tuple = (lat, lon)
+    def __init__(self):
+        self.tuple = getLatLng()
+        self.lat = self.tuple[0]
+        self.lng = self.tuple[1]
+        
+    def update(self):
+        self.tuple = getLatLng()
+        self.lat = self.tuple[0]
+        self.lng = self.tuple[1]
+        
+    def toString(self):
+        return "Latitude: " + self.lat + ", Longitude:  " + self.lng
+    
 
 class SpeedVanLocation(object): 
 
@@ -101,20 +112,18 @@ def distanceCheck(myGPS, speedVan):
 
 if __name__ == '__main__':
     speedVanList = scrapeData()
+    GPS = myGPS()
     run = True
 
     print("Running")
-    while(run):     
-        #update gps location
-        gpsCoords = liveLatLong()
-        gpsLat = gpsCoords[0]
-        gpsLong = gpsCoords[1]
-        GPS = myGPS(gpsLat, gpsLong) 
+    while(run):
+        GPS.update()
         for speedVan in speedVanList:
             if(distanceCheck(GPS, speedVan)):
                 print("You are near a speed van.")
                 alert()
                 time.sleep(3)
+        time.sleep(5)
 
     
 
