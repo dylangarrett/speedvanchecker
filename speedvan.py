@@ -118,6 +118,7 @@ if __name__ == '__main__':
     print("Running")
     while(run):
         GPS.update()
+        print(GPS.toString())
         for speedVan in speedVanList:
             while(distanceCheck(GPS, speedVan)):
                 print("You are near a speed van.")
