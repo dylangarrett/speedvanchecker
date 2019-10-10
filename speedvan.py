@@ -102,7 +102,8 @@ def distanceCheck(myGPS, speedVan):
             longLat = coordinateSplit(coord)
             coordTuple = (longLat[1], longLat[0])
             distanceFromCoord = distance.distance(myGPS.tuple, coordTuple).km
-            if distanceFromCoord <= 0.3: #less than 300m or .3km
+            if distanceFromCoord <= 0.5: #less than 300m or .3km
+                print("Speedvan nearby at: " + coordTuple)
                 return True
             else:
                 return False
