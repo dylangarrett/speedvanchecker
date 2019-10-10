@@ -22,7 +22,8 @@ def getLatLng():
     lngString = lines[3]
     lat = latString[:2].lstrip('0') + "." + "%.7s" % str(float(latString[2:]) * 1.0 / 60.0).lstrip("0.")
     lng = lngString[:3].lstrip('0') + "." + "%.7s" % str(float(lngString[3:]) * 1.0 / 60.0).lstrip("0.")
-    return lat, lng
+    output = (float(lat), float(lng))
+    return output
 
 if __name__ == "__main__":
     latlng = getLatLng()
