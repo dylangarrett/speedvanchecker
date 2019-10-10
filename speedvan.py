@@ -35,8 +35,21 @@ class myGPS(object):
     
     def toString(self):
         return "Latitude: " + self.lat + ", Longitude:  " + self.lng
-    
 
+class testGPS(object):
+    mixer.init()
+    
+    def __init__(self):
+
+        
+        self.lat = 53.1752121
+        self.lng = -6.8164815
+        self.tuple = (self.lat, self.lng)
+        
+    def alert(self):
+        mixer.Sound("beep.wav").play()
+        print("Played alert sound.")
+    
 class SpeedVanLocation(object): 
 
     def midPoint(self):
@@ -66,7 +79,6 @@ class SpeedVanLocation(object):
         self.endTuple = (self.endLat, self.endLong)
         self.midTuple = self.midPoint()
    
-
 def scrapeData():
     mydoc = minidom.parse('xdoc.xml')
     coords = mydoc.getElementsByTagName('coordinates')
@@ -95,20 +107,38 @@ def scrapeData():
     return speedVanList
 
 ##checks the distance between the speedvans and your gps location and returns true/false depending on whether you're close to a speed van
-def distanceCheck(myGPS, speedVan):
-    distanceFromMidPoint = distance.distance(myGPS.tuple, speedVan.midTuple).km
-    if distanceFromMidPoint <= 3: #less than 3km
-        for coord in speedVan.coords:
-            longLat = coordinateSplit(coord)
-            coordTuple = (longLat[1], longLat[0])
-            distanceFromCoord = distance.distance(myGPS.tuple, coordTuple).km
-            if distanceFromCoord <= 0.5: #less than 300m or .3km
-                print("Speedvan nearby at: " + coordTuple)
-                return True
-            else:
-                return False
-    elif distanceFromMidPoint > 3:
-        return False
+# def distanceCheck(myGPS, speedVan):
+#     closest = 500.00
+#     distanceFromMidPoint = distance.distance(myGPS.tuple, speedVan.midTuple).km
+#     if distanceFromMidPoint <= 3: #less than 3km
+#         for coord in speedVan.coords:
+#             longLat = coordinateSplit(coord)
+#             coordTuple = (longLat[1], longLat[0])
+#             distanceFromCoord = distance.distance(myGPS.tuple, coordTuple).km
+#             if distanceFromCoord <= 0.5: #less than 300m or .3km
+#                 print("Speedvan nearby at: " + coordTuple)
+#                 return True
+#             else:
+#                 return False
+#     elif distanceFromMidPoint > 3:
+#         return False
+
+
+def distanceFrom(GPS, speedVan):
+    #print(GPS.tuple, speedVan.midTuple)
+    distanceFrom = distance.distance(GPS.tuple, speedVan.midTuple).km
+    return distanceFrom
+
+def distanceCheck(myGPS, speedVanList):
+    closest = 500.00
+    for speedvan in speedVanList:   
+        if distanceFrom(GPS, speedvan) < closest:
+            closest = distanceFrom(GPS, speedvan)
+    distanceKM = str(closest)
+    print("Closest speedvan is " + distanceKM + "km away")
+    if closest < 0.8:
+        print("Speedvan nearby!")
+        myGPS.alert()
 
 if __name__ == '__main__':
 
@@ -120,12 +150,8 @@ if __name__ == '__main__':
     while(run):
         GPS.update()
         print(GPS.toString())
-        for speedVan in speedVanList:
-            while(distanceCheck(GPS, speedVan)):
-                print("You are near a speed van.")
-                GPS.alert()
-                time.sleep(3)
-        time.sleep(5)
+        distanceCheck(GPS, speedVanList)
+        time.sleep(3)
 
 
     
