@@ -23,12 +23,12 @@ class myGPS(object):
 
         self.tuple = getLatLng()
         self.lat = self.tuple[0]
-        self.lng = self.tuple[1]
+        self.lng = -self.tuple[1]
         
     def update(self):
         self.tuple = getLatLng()
         self.lat = self.tuple[0]
-        self.lng = self.tuple[1]
+        self.lng = -self.tuple[1]
         
     def alert(self):
         mixer.Sound("beep.wav").play()
